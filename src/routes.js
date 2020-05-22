@@ -1,19 +1,43 @@
-import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
+const express = require('express');
+const {celebrate, Segments, Joi} = require('celebrate');
+const OngController = require('./controllers/ongController');
+const IncidentController = require('./controllers/incidentController');
+const ProfileController = require('./controllers/profileController');
+const SessionController = require('./controllers/sessionController');
 
-const AppStack = createStackNavigator();
+const routes = express.Router();
 
-import Incidents from './pages/Incidents';
-import Detail from './pages/Detail';
+routes.post('/sessions', SessionController.create);
 
-export default function Routes(){
-    return(
-        <NavigationContainer>
-            <AppStack.Navigator screenOptions={{headerShown: false}}>
-                <AppStack.Screen name="Incidents" component={Incidents} />
-                <AppStack.Screen name="Detail" component={Detail} />
-            </AppStack.Navigator>
-        </NavigationContainer>
-    );
-}
+routes.get('/ongs', OngController.index);
+routes.post('/ongs', celebrate({
+    [Segments.BODY]:Joi.object().keys({
+        name: Joi.string().required(),
+        email: Joi.string().required().email(),
+        whatsapp: Joi.string().required(),
+        city: Joi.string().required(),
+        uf: Joi.string().required().length(2),
+    })
+}) , OngController.create);
+
+routes.get('/incidents',celebrate({
+    [Segments.QUERY]: Joi.object().keys({
+        page: Joi.number(),
+    })
+}) ,IncidentController.index);
+
+routes.get('/profile',celebrate({
+    [Segments.HEADERS]:Joi.object({
+        authorization: Joi.string().required(),
+    }).unknown(),
+}) , ProfileController.index);
+
+routes.post('/incidents', IncidentController.create);
+
+routes.delete('/incidents/:id',celebrate({
+    [Segments.PARAMS]: Joi.object().keys({
+        id: Joi.number().required(),
+    })
+    }), IncidentController.delete);
+
+module.exports = routes;
