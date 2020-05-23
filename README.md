@@ -1,2 +1,0 @@
-# omnistack-mobile
-atividade 
